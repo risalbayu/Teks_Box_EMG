@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Histori EMG Monitoring</title>
+  <style>
+    body {
+      font-family: monospace, sans-serif;
+      background-color: #ffffff;
+      color: #008080; /* hijau kebiruan */
+      margin: 0;
+      padding: 15px;
+      box-sizing: border-box;
+    }
+
+    h2 {
+      font-size: 1.2em;
+      text-align: center;
+      margin-bottom: 10px;
+    }
+
+    #button-container {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 10px;
+    }
+
+    button {
+      background-color: #008080;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      font-weight: bold;
+      font-size: 1em;
+      cursor: pointer;
+      border-radius: 6px;
+      flex: 1 1 45%;
+      min-width: 100px;
+    }
+
+    button:hover {
+      background-color: #006666;
+    }
+
+    #output {
+      border: 1px solid #008080;
+      padding: 10px;
+      height: 70vh;
+      overflow-y: scroll;
+      white-space: pre-wrap;
+      background-color: #f9f9f9;
+      font-size: 0.95em;
+    }
+  </style>
+</head>
+<body>
+  <h2>📋 EMG Data Histori</h2>
+  <div id="button-container">
+    <button id="toggleButton">Auto-Scroll: ON</button>
+    <button id="clearButton">🧹 Clear Histori</button>
+  </div>
+  <div id="output"></div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getDatabase, ref, onChildAdded, remove } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDRa4h7e_YmFE_nhCtE8DQun8NJ5b1nDkM",
+      authDomain: "myapp-b8e6f.firebaseapp.com",
+      databaseURL: "https://myapp-b8e6f-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "myapp-b8e6f",
+      storageBucket: "myapp-b8e6f.appspot.com",
+      messagingSenderId: "YOUR_SENDER_ID",
+      appId: "YOUR_APP_ID"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    const output = document.getElementById("output");
+    const toggleButton = document.getElementById("toggleButton");
+    const clearButton = document.getElementById("clearButton");
+    let autoScroll = true;
+
+    toggleButton.addEventListener("click", () => {
+      autoScroll = !autoScroll;
+      toggleButton.textContent = `Auto-Scroll: ${autoScroll ? "ON" : "OFF"}`;
+    });
+
+    clearButton.addEventListener("click", async () => {
+      output.textContent = "";
+      try {
+        await remove(ref(db, "/monitoring_tubuh/line1/history"));
+        alert("✅ Histori berhasil dihapus dari Firebase.");
+      } catch (error) {
+        alert("❌ Gagal hapus Firebase: " + error);
+      }
+    });
+
+    const path = "/monitoring_tubuh/line1/history";
+    onChildAdded(ref(db, path), (snapshot) => {
+      const data = snapshot.val();
+      const line = `[${data.waktu}] EMG: ${data.emg}\n`;
+      output.textContent += line;
+      if (autoScroll) {
+        output.scrollTop = output.scrollHeight;
+      }
+    });
+  </script>
+</body>
+</html>
